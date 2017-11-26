@@ -5,22 +5,21 @@ Shader "GVoxelizer2/Voxelizer"
 {
     Properties
     {
-        [Header(Base Properties)]
-        _Color("Color", Color) = (1, 1, 1, 1)
+        _Color("Albedo", Color) = (1, 1, 1, 1)
         _Glossiness("Smoothness", Range(0, 1)) = 0.5
         [Gamma] _Metallic("Metallic", Range(0, 1)) = 0
-        [HDR] _EmissionColor("Emission", Color) = (0, 0, 0)
 
-        [Header(Effect Properties)]
-        _Color2("Color", Color) = (0, 0, 0, 0)
-        _Glossiness2("Smoothness", Range(0, 1)) = 0
-        [Gamma] _Metallic2("Metallic", Range(0, 1)) = 0
-        [HDR] _EmissionColor2("Emission", Color) = (0, 0, 0)
+        [Header(Surface Emission Colors)]
+        [HDR] _Emission1("Primary", Color) = (0, 0, 0)
+        [HDR] _Emission2("Secondary", Color) = (0, 0, 0)
 
-        [Header(Edge Properteis)]
-        [HDR] _EdgeColor("Color", Color) = (1, 0, 0)
+        [Header(Edge Emission Colors)]
+        [HDR] _EdgeColor1("Primary", Color) = (0, 0, 0)
+        [HDR] _EdgeColor2("Secondary", Color) = (0, 0, 0)
 
-        [Space]
+        [Header(Animation)]
+        _Density("Voxel Density", Float) = 0.1
+        _VoxelSize("Voxel Size", Float) = 0.02
         _Scatter("Scatter Amount", Float) = 0.1
     }
     SubShader

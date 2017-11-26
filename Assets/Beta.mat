@@ -57,6 +57,7 @@ Material:
     m_Floats:
     - _BumpScale: 1
     - _Cutoff: 0.5
+    - _Density: 0.12
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
@@ -73,10 +74,15 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
+    - _VoxelSize: 0.02
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 0, g: 0, b: 0, a: 1}
     - _Color2: {r: 0, g: 0, b: 0, a: 1}
     - _EdgeColor: {r: 0.47058818, g: 1.8734282, b: 1.9999999, a: 1}
+    - _EdgeColor1: {r: 1, g: 0.7058823, b: 0.7058823, a: 1}
+    - _EdgeColor2: {r: 1, g: 0.35294116, b: 0.35294116, a: 1}
+    - _Emission1: {r: 1, g: 0, b: 0, a: 1}
+    - _Emission2: {r: 0.11724138, g: 0, b: 1, a: 1}
     - _EmissionColor: {r: 0.5588235, g: 0.5588235, b: 0.5588235, a: 1}
     - _EmissionColor2: {r: 0, g: 0, b: 0, a: 1}

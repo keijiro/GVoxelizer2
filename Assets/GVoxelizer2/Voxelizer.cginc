@@ -16,20 +16,17 @@
 half4 _Color;
 half _Glossiness;
 half _Metallic;
-half3 _EmissionColor;
 
-// Effect properties
-half4 _Color2;
-half _Glossiness2;
-half _Metallic2;
-half3 _EmissionColor2;
+// Emission Colors
+half3 _Emission1, _Emission2;
+half3 _EdgeColor1, _EdgeColor2;
 
-// Edge properties
-half3 _EdgeColor;
-
+// Animation parameters
+float _Density;
+float _VoxelSize;
 float _Scatter;
 
-// Dynamic properties
+// Effector parameters
 float _LocalTime;
 float4 _EffectVector1;
 float4 _EffectVector2;
@@ -58,8 +55,9 @@ struct Varyings
     // GBuffer construction pass
     float3 normal : NORMAL;
     half3 ambient : TEXCOORD0;
-    float4 edge : TEXCOORD1; // barycentric coord (xyz), emission (w)
-    float4 wpos_ch : TEXCOORD2; // world position (xyz), channel select (w)
+    float3 wpos : TEXCOORD1;
+    float2 edge : TEXCOORD2; // In-quad coordinates used in edge detection
+    half2 emission : TEXCOORD3; // Emission power (x) and channel select (y)
 
 #endif
 };
@@ -79,7 +77,7 @@ void Vertex(inout Attributes input)
 // Geometry stage
 //
 
-Varyings VertexOutput(float3 wpos, half3 wnrm, float4 edge, float channel)
+Varyings VertexOutput(float3 wpos, half3 wnrm, float2 edge, half2 emission)
 {
     Varyings o;
 
@@ -99,8 +97,9 @@ Varyings VertexOutput(float3 wpos, half3 wnrm, float4 edge, float channel)
     o.position = UnityWorldToClipPos(float4(wpos, 1));
     o.normal = wnrm;
     o.ambient = ShadeSHPerVertex(wnrm, 0);
+    o.wpos = wpos;
     o.edge = edge;
-    o.wpos_ch = float4(wpos, channel);
+    o.emission = emission;
 
 #endif
     return o;
@@ -132,7 +131,7 @@ void Geometry(
 
     // Cube or triangle?
     uint seed = pid * 877;
-    if (Random(seed) < 0.1)
+    if (Random(seed) < _Density)
     {
         // Cube animation
         float rnd = Random(seed + 1); // Random number
@@ -141,14 +140,15 @@ void Geometry(
         float4 snoise = snoise_grad(np); // Gradient noise
 
         float3 pos = center + snoise.xyz * 0.01; // Cube position
-        pos -= n0 * 0.01;
+        pos -= n0 * _VoxelSize;
 
         float ss_param = smoothstep(0, 1, param);
 
-        float3 scale = 0.02 * ss_param; // Cube scale animation
+        float3 scale = _VoxelSize * ss_param; // Cube scale animation
         scale *= abs(snoise.xyz);
 
-        float edge = saturate(param * 5); // Edge color (emission power)
+        float edge = 1;//saturate(param * 5); // Edge color (emission power)
+        edge = saturate(param * 5) * (1 + smoothstep(0.0, 0.1, 1-param));
 
 
 
@@ -175,49 +175,49 @@ void Geometry(
         float3 c_p6 = pos + float3(-1, +1, +1) * scale;
         float3 c_p7 = pos + float3(+1, +1, +1) * scale;
 
-        half ch = Random(seed + 2);
+        half2 em = half2(edge, Random(seed + 2));
 
         // Vertex outputs
         float3 c_n = float3(-1, 0, 0);
-        outStream.Append(VertexOutput(c_p2, c_n, float4(0, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p0, c_n, float4(1, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p6, c_n, float4(0, 1, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p4, c_n, float4(1, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p2, c_n, float2(0, 0), em));
+        outStream.Append(VertexOutput(c_p0, c_n, float2(1, 0), em));
+        outStream.Append(VertexOutput(c_p6, c_n, float2(0, 1), em));
+        outStream.Append(VertexOutput(c_p4, c_n, float2(1, 1), em));
         outStream.RestartStrip();
 
         c_n = float3(1, 0, 0);
-        outStream.Append(VertexOutput(c_p1, c_n, float4(0, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p3, c_n, float4(1, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p5, c_n, float4(0, 1, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p7, c_n, float4(1, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p1, c_n, float2(0, 0), em));
+        outStream.Append(VertexOutput(c_p3, c_n, float2(1, 0), em));
+        outStream.Append(VertexOutput(c_p5, c_n, float2(0, 1), em));
+        outStream.Append(VertexOutput(c_p7, c_n, float2(1, 1), em));
         outStream.RestartStrip();
 
         c_n = float3(0, -1, 0);
-        outStream.Append(VertexOutput(c_p0, c_n, float4(0, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p1, c_n, float4(1, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p4, c_n, float4(0, 1, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p5, c_n, float4(1, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p0, c_n, float2(0, 0), em));
+        outStream.Append(VertexOutput(c_p1, c_n, float2(1, 0), em));
+        outStream.Append(VertexOutput(c_p4, c_n, float2(0, 1), em));
+        outStream.Append(VertexOutput(c_p5, c_n, float2(1, 1), em));
         outStream.RestartStrip();
 
         c_n = float3(0, 1, 0);
-        outStream.Append(VertexOutput(c_p3, c_n, float4(0, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p2, c_n, float4(1, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p7, c_n, float4(0, 1, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p6, c_n, float4(1, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p3, c_n, float2(0, 0), em));
+        outStream.Append(VertexOutput(c_p2, c_n, float2(1, 0), em));
+        outStream.Append(VertexOutput(c_p7, c_n, float2(0, 1), em));
+        outStream.Append(VertexOutput(c_p6, c_n, float2(1, 1), em));
         outStream.RestartStrip();
 
         c_n = float3(0, 0, -1);
-        outStream.Append(VertexOutput(c_p1, c_n, float4(0, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p0, c_n, float4(1, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p3, c_n, float4(0, 1, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p2, c_n, float4(1, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p1, c_n, float2(0, 0), em));
+        outStream.Append(VertexOutput(c_p0, c_n, float2(1, 0), em));
+        outStream.Append(VertexOutput(c_p3, c_n, float2(0, 1), em));
+        outStream.Append(VertexOutput(c_p2, c_n, float2(1, 1), em));
         outStream.RestartStrip();
 
         c_n = float3(0, 0, 1);
-        outStream.Append(VertexOutput(c_p4, c_n, float4(0, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p5, c_n, float4(1, 0, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p6, c_n, float4(0, 1, 0.5, edge), ch));
-        outStream.Append(VertexOutput(c_p7, c_n, float4(1, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p4, c_n, float2(0, 0), em));
+        outStream.Append(VertexOutput(c_p5, c_n, float2(1, 0), em));
+        outStream.Append(VertexOutput(c_p6, c_n, float2(0, 1), em));
+        outStream.Append(VertexOutput(c_p7, c_n, float2(1, 1), em));
         outStream.RestartStrip();
     }
 }
@@ -252,42 +252,36 @@ void Fragment(
 )
 {
     // PBS workflow conversion (metallic -> specular)
-    half3 c1_diff, c1_spec, c2_diff, c2_spec;
+    half3 c_diff, c_spec;
     half not_in_use;
 
-    c1_diff = DiffuseAndSpecularFromMetallic(
-        _Color.rgb, _Metallic,   // input
-        c1_spec, not_in_use      // output
-    );
-
-    c2_diff = DiffuseAndSpecularFromMetallic(
-        _Color2.rgb, _Metallic2, // input
-        c2_spec, not_in_use      // output
+    c_diff = DiffuseAndSpecularFromMetallic(
+        _Color.rgb, _Metallic, // input
+        c_spec, not_in_use     // output
     );
 
     // Detect fixed-width edges with using screen space derivatives of
     // barycentric coordinates.
-    float3 bcc = input.edge.xyz;
-    float3 fw = fwidth(bcc);
-    float3 edge3 = min(smoothstep(fw / 2, fw,     bcc),
+    float2 bcc = input.edge;
+    float2 fw = fwidth(bcc);
+    float2 edge2 = min(smoothstep(fw / 2, fw,     bcc),
                        smoothstep(fw / 2, fw, 1 - bcc));
-    float edge = 1 - min(min(edge3.x, edge3.y), edge3.z);
+    float edge = 1 - min(edge2.x, edge2.y);
 
     // Update the GBuffer.
     UnityStandardData data;
-    float ch = input.wpos_ch.w;
-    data.diffuseColor = lerp(c1_diff, c2_diff, ch);
+    data.diffuseColor = c_diff;
     data.occlusion = 1;
-    data.specularColor = lerp(c1_spec, c2_spec, ch);
-    data.smoothness = lerp(_Glossiness, _Glossiness2, ch);
+    data.specularColor = c_spec;
+    data.smoothness = _Glossiness;
     data.normalWorld = input.normal;
     UnityStandardDataToGbuffer(data, outGBuffer0, outGBuffer1, outGBuffer2);
 
     // Output ambient light and edge emission to the emission buffer.
-    half3 sh = ShadeSHPerPixel(data.normalWorld, input.ambient, input.wpos_ch.xyz);
+    half3 sh = ShadeSHPerPixel(data.normalWorld, input.ambient, input.wpos);
     outEmission = half4(sh * data.diffuseColor, 1);
-    outEmission.xyz += lerp(_EmissionColor, _EmissionColor2, ch);
-    outEmission.xyz += _EdgeColor * input.edge.w * edge;
+    outEmission.xyz += lerp(_Emission1, _Emission2, input.emission.y) * input.emission.x;
+    outEmission.xyz += lerp(_EdgeColor1, _EdgeColor2, input.emission.y) * input.emission.x * edge;
 }
 
 #endif
