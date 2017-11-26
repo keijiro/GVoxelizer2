@@ -19,6 +19,9 @@ Shader "GVoxelizer2/Voxelizer"
 
         [Header(Edge Properteis)]
         [HDR] _EdgeColor("Color", Color) = (1, 0, 0)
+
+        [Space]
+        _Scatter("Scatter Amount", Float) = 0.1
     }
     SubShader
     {

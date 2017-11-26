@@ -27,6 +27,8 @@ half3 _EmissionColor2;
 // Edge properties
 half3 _EdgeColor;
 
+float _Scatter;
+
 // Dynamic properties
 float _LocalTime;
 float4 _EffectVector1;
@@ -139,10 +141,29 @@ void Geometry(
         float4 snoise = snoise_grad(np); // Gradient noise
 
         float3 pos = center + snoise.xyz * 0.01; // Cube position
-        float3 scale = 0.02 * param; // Cube scale animation
+        pos -= n0 * 0.01;
+
+        float ss_param = smoothstep(0, 1, param);
+
+        float3 scale = 0.02 * ss_param; // Cube scale animation
         scale *= abs(snoise.xyz);
 
         float edge = saturate(param * 5); // Edge color (emission power)
+
+
+
+
+        // Random motion
+        float3 move = RandomVector(seed + 1);
+        move.y += 0.4;
+        move *= (1 -ss_param) * _Scatter;
+        pos += move;
+
+        // Simple shrink
+        //float scale = 1 - ss_param;
+
+
+
 
         // Cube points
         float3 c_p0 = pos + float3(-1, -1, -1) * scale;
