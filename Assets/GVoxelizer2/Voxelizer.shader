@@ -12,6 +12,7 @@ Shader "GVoxelizer2/Voxelizer"
         [Header(Surface Emission Colors)]
         [HDR] _Emission1("Primary", Color) = (0, 0, 0)
         [HDR] _Emission2("Secondary", Color) = (0, 0, 0)
+        [HDR] _Emission3("Additional", Color) = (0, 0, 0)
 
         [Header(Edge Emission Colors)]
         [HDR] _EdgeColor1("Primary", Color) = (0, 0, 0)

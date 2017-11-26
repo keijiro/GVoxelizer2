@@ -18,7 +18,7 @@ half _Glossiness;
 half _Metallic;
 
 // Emission Colors
-half3 _Emission1, _Emission2;
+half3 _Emission1, _Emission2, _Emission3;
 half3 _EdgeColor1, _EdgeColor2;
 
 // Animation parameters
@@ -57,7 +57,7 @@ struct Varyings
     half3 ambient : TEXCOORD0;
     float3 wpos : TEXCOORD1;
     float2 edge : TEXCOORD2; // In-quad coordinates used in edge detection
-    half2 emission : TEXCOORD3; // Emission power (x) and channel select (y)
+    half3 emission : TEXCOORD3; // Power (x), channel (y) and addition (z)
 
 #endif
 };
@@ -77,7 +77,7 @@ void Vertex(inout Attributes input)
 // Geometry stage
 //
 
-Varyings VertexOutput(float3 wpos, half3 wnrm, float2 edge, half2 emission)
+Varyings VertexOutput(float3 wpos, half3 wnrm, float2 edge, half3 emission)
 {
     Varyings o;
 
@@ -121,15 +121,19 @@ void Geometry(
     float3 normal = input[0].normal;
 
     // Deformation parameter
-    float param = dot(_EffectVector1.xyz, center) + _EffectVector1.w;
+    float param = dot(_EffectVector1.xyz, center) - _EffectVector1.w;
     param = saturate(1 - param);
 
     // Draw nothing before the beginning of the deformation.
-    if (param < 0) return;
+    if (param == 0) return;
 
     // Random selection: Draw nothing if not selected.
     uint seed = pid * 877;
     if (Random(seed) > _Density) return;
+
+    // Additional parameter
+    float param2 = dot(_EffectVector2.xyz, center) - _EffectVector2.w;
+    param2 = saturate(1 - abs(0.5 - param2) * 2);
 
     // Gradient noise
     float3 npos = float3(Random(seed + 1) * 2378.34, _LocalTime * 0.8, 0);
@@ -149,7 +153,7 @@ void Geometry(
     scale.y *= 1 + smoothstep(0.0, 0.1, 1 - param);
 
     // Emission parameters
-    half2 em = half2(saturate(param * 2), Random(seed + 2));
+    half3 em = half3(saturate(param * 2), Random(seed + 2), param2);
     em.x *= 1 + smoothstep(0.0, 0.1, 1 - param);
 
     // Cube points
@@ -266,8 +270,9 @@ void Fragment(
     outEmission = half4(sh * data.diffuseColor, 1);
 
     // Add emission colors.
-    float2 em = input.emission;
+    float3 em = input.emission;
     outEmission.xyz += lerp(_Emission1, _Emission2, em.y) * em.x;
+    outEmission.xyz += _Emission3 * em.z;
     outEmission.xyz += lerp(_EdgeColor1, _EdgeColor2, em.y) * em.x * edge;
 }
 
