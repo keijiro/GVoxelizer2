@@ -154,47 +154,49 @@ void Geometry(
         float3 c_p6 = pos + float3(-1, +1, +1) * scale;
         float3 c_p7 = pos + float3(+1, +1, +1) * scale;
 
+        half ch = Random(seed + 2);
+
         // Vertex outputs
         float3 c_n = float3(-1, 0, 0);
-        outStream.Append(VertexOutput(c_p2, c_n, float4(0, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p0, c_n, float4(1, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p6, c_n, float4(0, 1, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p4, c_n, float4(1, 1, 0.5, edge), 0));
+        outStream.Append(VertexOutput(c_p2, c_n, float4(0, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p0, c_n, float4(1, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p6, c_n, float4(0, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p4, c_n, float4(1, 1, 0.5, edge), ch));
         outStream.RestartStrip();
 
         c_n = float3(1, 0, 0);
-        outStream.Append(VertexOutput(c_p1, c_n, float4(0, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p3, c_n, float4(1, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p5, c_n, float4(0, 1, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p7, c_n, float4(1, 1, 0.5, edge), 0));
+        outStream.Append(VertexOutput(c_p1, c_n, float4(0, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p3, c_n, float4(1, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p5, c_n, float4(0, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p7, c_n, float4(1, 1, 0.5, edge), ch));
         outStream.RestartStrip();
 
         c_n = float3(0, -1, 0);
-        outStream.Append(VertexOutput(c_p0, c_n, float4(0, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p1, c_n, float4(1, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p4, c_n, float4(0, 1, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p5, c_n, float4(1, 1, 0.5, edge), 0));
+        outStream.Append(VertexOutput(c_p0, c_n, float4(0, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p1, c_n, float4(1, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p4, c_n, float4(0, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p5, c_n, float4(1, 1, 0.5, edge), ch));
         outStream.RestartStrip();
 
         c_n = float3(0, 1, 0);
-        outStream.Append(VertexOutput(c_p3, c_n, float4(0, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p2, c_n, float4(1, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p7, c_n, float4(0, 1, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p6, c_n, float4(1, 1, 0.5, edge), 0));
+        outStream.Append(VertexOutput(c_p3, c_n, float4(0, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p2, c_n, float4(1, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p7, c_n, float4(0, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p6, c_n, float4(1, 1, 0.5, edge), ch));
         outStream.RestartStrip();
 
         c_n = float3(0, 0, -1);
-        outStream.Append(VertexOutput(c_p1, c_n, float4(0, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p0, c_n, float4(1, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p3, c_n, float4(0, 1, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p2, c_n, float4(1, 1, 0.5, edge), 0));
+        outStream.Append(VertexOutput(c_p1, c_n, float4(0, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p0, c_n, float4(1, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p3, c_n, float4(0, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p2, c_n, float4(1, 1, 0.5, edge), ch));
         outStream.RestartStrip();
 
         c_n = float3(0, 0, 1);
-        outStream.Append(VertexOutput(c_p4, c_n, float4(0, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p5, c_n, float4(1, 0, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p6, c_n, float4(0, 1, 0.5, edge), 0));
-        outStream.Append(VertexOutput(c_p7, c_n, float4(1, 1, 0.5, edge), 0));
+        outStream.Append(VertexOutput(c_p4, c_n, float4(0, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p5, c_n, float4(1, 0, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p6, c_n, float4(0, 1, 0.5, edge), ch));
+        outStream.Append(VertexOutput(c_p7, c_n, float4(1, 1, 0.5, edge), ch));
         outStream.RestartStrip();
     }
 }
@@ -262,7 +264,9 @@ void Fragment(
 
     // Output ambient light and edge emission to the emission buffer.
     half3 sh = ShadeSHPerPixel(data.normalWorld, input.ambient, input.wpos_ch.xyz);
-    outEmission = half4(sh * data.diffuseColor + _EdgeColor * input.edge.w * edge, 1);
+    outEmission = half4(sh * data.diffuseColor, 1);
+    outEmission.xyz += lerp(_EmissionColor, _EmissionColor2, ch);
+    outEmission.xyz += _EdgeColor * input.edge.w * edge;
 }
 
 #endif
