@@ -15,6 +15,49 @@ MonoBehaviour:
   - {fileID: 114898038698496662}
   - {fileID: 114152191575443612}
   - {fileID: 114335081281243746}
+  - {fileID: 114003641455785578}
+--- !u!114 &114003641455785578
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40b924e2dad56384a8df2a1e111bb675, type: 3}
+  m_Name: Vignette
+  m_EditorClassIdentifier: 
+  active: 1
+  enabled:
+    overrideState: 1
+    value: 1
+  mode:
+    overrideState: 0
+    value: 0
+  color:
+    overrideState: 0
+    value: {r: 0, g: 0, b: 0, a: 1}
+  center:
+    overrideState: 0
+    value: {x: 0.5, y: 0.5}
+  intensity:
+    overrideState: 1
+    value: 0.212
+  smoothness:
+    overrideState: 1
+    value: 0.317
+  roundness:
+    overrideState: 0
+    value: 1
+  rounded:
+    overrideState: 0
+    value: 0
+  mask:
+    overrideState: 0
+    value: {fileID: 0}
+  opacity:
+    overrideState: 0
+    value: 1
 --- !u!114 &114152191575443612
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -109,11 +152,11 @@ MonoBehaviour:
     overrideState: 0
     value: {fileID: 0}
   temperature:
-    overrideState: 0
-    value: 0
+    overrideState: 1
+    value: 19
   tint:
-    overrideState: 0
-    value: 0
+    overrideState: 1
+    value: 6
   colorFilter:
     overrideState: 0
     value: {r: 1, g: 1, b: 1, a: 1}
@@ -128,7 +171,7 @@ MonoBehaviour:
     value: 0
   postExposure:
     overrideState: 1
-    value: 0.24
+    value: 0.45
   contrast:
     overrideState: 0
     value: 0
@@ -160,14 +203,14 @@ MonoBehaviour:
     overrideState: 0
     value: 100
   lift:
-    overrideState: 0
-    value: {x: 1, y: 1, z: 1, w: 0}
+    overrideState: 1
+    value: {x: 1, y: 0.90815717, z: 0.9526318, w: 0}
   gamma:
-    overrideState: 0
-    value: {x: 1, y: 1, z: 1, w: 0}
+    overrideState: 1
+    value: {x: 0.91775596, y: 0.93228716, z: 1, w: 0}
   gain:
-    overrideState: 0
-    value: {x: 1, y: 1, z: 1, w: 0}
+    overrideState: 1
+    value: {x: 0.85824895, y: 1, z: 0.9699388, w: 0}
   masterCurve:
     overrideState: 0
     value:
@@ -329,16 +372,16 @@ MonoBehaviour:
     value: 1
   intensity:
     overrideState: 1
-    value: 2
+    value: 1.51
   threshold:
     overrideState: 1
-    value: 1
+    value: 1.05
   softKnee:
-    overrideState: 0
-    value: 0.5
+    overrideState: 1
+    value: 1
   diffusion:
     overrideState: 1
-    value: 8.31
+    value: 8.22
   anamorphicRatio:
     overrideState: 0
     value: 0
