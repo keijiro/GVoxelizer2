@@ -115,12 +115,10 @@ void Geometry(
     float3 p0 = input[0].position.xyz;
     float3 p1 = input[1].position.xyz;
     float3 p2 = input[2].position.xyz;
-
-    float3 n0 = input[0].normal;
-    float3 n1 = input[1].normal;
-    float3 n2 = input[2].normal;
-
     float3 center = (p0 + p1 + p2) / 3;
+
+    // Use the 1st normal vector as a triangle normal.
+    float3 normal = input[0].normal;
 
     // Deformation parameter
     float param = dot(_EffectVector1.xyz, center) + _EffectVector1.w;
@@ -129,97 +127,83 @@ void Geometry(
     // Draw nothing before the beginning of the deformation.
     if (param < 0) return;
 
-    // Cube or triangle?
+    // Random selection: Draw nothing if not selected.
     uint seed = pid * 877;
-    if (Random(seed) < _Density)
-    {
-        // Cube animation
-        float rnd = Random(seed + 1); // Random number
+    if (Random(seed) > _Density) return;
 
-        float3 np = float3(rnd * 2378.34, _LocalTime * 0.8, 0);
-        float4 snoise = snoise_grad(np); // Gradient noise
+    // Gradient noise
+    float3 npos = float3(Random(seed + 1) * 2378.34, _LocalTime * 0.8, 0);
+    float4 snoise = snoise_grad(npos);
 
-        float3 pos = center + snoise.xyz * 0.01; // Cube position
-        pos -= n0 * _VoxelSize;
+    // Scatter motion
+    float ss_param = smoothstep(0, 1, param);
+    float3 scatter = RandomVector(seed + 1);
+    scatter *= (1 - ss_param) * _Scatter;
 
-        float ss_param = smoothstep(0, 1, param);
+    // Cube position
+    float3 pos = center - normal * _VoxelSize; // erode to compensate inflation
+    pos += scatter + snoise.xyz * 0.01; // linear motion + undulation
 
-        float3 scale = _VoxelSize * ss_param; // Cube scale animation
-        scale *= abs(snoise.xyz);
+    // Scale animation
+    float3 scale = abs(snoise.xyz) * _VoxelSize * ss_param;
+    scale.y *= 1 + smoothstep(0.0, 0.1, 1 - param);
 
-        float edge = 1;//saturate(param * 5); // Edge color (emission power)
-        edge = saturate(param * 5) * (1 + smoothstep(0.0, 0.1, 1-param));
+    // Emission parameters
+    half2 em = half2(saturate(param * 2), Random(seed + 2));
+    em.x *= 1 + smoothstep(0.0, 0.1, 1 - param);
 
+    // Cube points
+    float3 c_p0 = pos + float3(-1, -1, -1) * scale;
+    float3 c_p1 = pos + float3(+1, -1, -1) * scale;
+    float3 c_p2 = pos + float3(-1, +1, -1) * scale;
+    float3 c_p3 = pos + float3(+1, +1, -1) * scale;
+    float3 c_p4 = pos + float3(-1, -1, +1) * scale;
+    float3 c_p5 = pos + float3(+1, -1, +1) * scale;
+    float3 c_p6 = pos + float3(-1, +1, +1) * scale;
+    float3 c_p7 = pos + float3(+1, +1, +1) * scale;
 
+    // Vertex outputs
+    float3 c_n = float3(-1, 0, 0);
+    outStream.Append(VertexOutput(c_p2, c_n, float2(0, 0), em));
+    outStream.Append(VertexOutput(c_p0, c_n, float2(1, 0), em));
+    outStream.Append(VertexOutput(c_p6, c_n, float2(0, 1), em));
+    outStream.Append(VertexOutput(c_p4, c_n, float2(1, 1), em));
+    outStream.RestartStrip();
 
+    c_n = float3(1, 0, 0);
+    outStream.Append(VertexOutput(c_p1, c_n, float2(0, 0), em));
+    outStream.Append(VertexOutput(c_p3, c_n, float2(1, 0), em));
+    outStream.Append(VertexOutput(c_p5, c_n, float2(0, 1), em));
+    outStream.Append(VertexOutput(c_p7, c_n, float2(1, 1), em));
+    outStream.RestartStrip();
 
-        // Random motion
-        float3 move = RandomVector(seed + 1);
-        move.y += 0.4;
-        move *= (1 -ss_param) * _Scatter;
-        pos += move;
+    c_n = float3(0, -1, 0);
+    outStream.Append(VertexOutput(c_p0, c_n, float2(0, 0), em));
+    outStream.Append(VertexOutput(c_p1, c_n, float2(1, 0), em));
+    outStream.Append(VertexOutput(c_p4, c_n, float2(0, 1), em));
+    outStream.Append(VertexOutput(c_p5, c_n, float2(1, 1), em));
+    outStream.RestartStrip();
 
-        // Simple shrink
-        //float scale = 1 - ss_param;
+    c_n = float3(0, 1, 0);
+    outStream.Append(VertexOutput(c_p3, c_n, float2(0, 0), em));
+    outStream.Append(VertexOutput(c_p2, c_n, float2(1, 0), em));
+    outStream.Append(VertexOutput(c_p7, c_n, float2(0, 1), em));
+    outStream.Append(VertexOutput(c_p6, c_n, float2(1, 1), em));
+    outStream.RestartStrip();
 
+    c_n = float3(0, 0, -1);
+    outStream.Append(VertexOutput(c_p1, c_n, float2(0, 0), em));
+    outStream.Append(VertexOutput(c_p0, c_n, float2(1, 0), em));
+    outStream.Append(VertexOutput(c_p3, c_n, float2(0, 1), em));
+    outStream.Append(VertexOutput(c_p2, c_n, float2(1, 1), em));
+    outStream.RestartStrip();
 
-
-
-        // Cube points
-        float3 c_p0 = pos + float3(-1, -1, -1) * scale;
-        float3 c_p1 = pos + float3(+1, -1, -1) * scale;
-        float3 c_p2 = pos + float3(-1, +1, -1) * scale;
-        float3 c_p3 = pos + float3(+1, +1, -1) * scale;
-        float3 c_p4 = pos + float3(-1, -1, +1) * scale;
-        float3 c_p5 = pos + float3(+1, -1, +1) * scale;
-        float3 c_p6 = pos + float3(-1, +1, +1) * scale;
-        float3 c_p7 = pos + float3(+1, +1, +1) * scale;
-
-        half2 em = half2(edge, Random(seed + 2));
-
-        // Vertex outputs
-        float3 c_n = float3(-1, 0, 0);
-        outStream.Append(VertexOutput(c_p2, c_n, float2(0, 0), em));
-        outStream.Append(VertexOutput(c_p0, c_n, float2(1, 0), em));
-        outStream.Append(VertexOutput(c_p6, c_n, float2(0, 1), em));
-        outStream.Append(VertexOutput(c_p4, c_n, float2(1, 1), em));
-        outStream.RestartStrip();
-
-        c_n = float3(1, 0, 0);
-        outStream.Append(VertexOutput(c_p1, c_n, float2(0, 0), em));
-        outStream.Append(VertexOutput(c_p3, c_n, float2(1, 0), em));
-        outStream.Append(VertexOutput(c_p5, c_n, float2(0, 1), em));
-        outStream.Append(VertexOutput(c_p7, c_n, float2(1, 1), em));
-        outStream.RestartStrip();
-
-        c_n = float3(0, -1, 0);
-        outStream.Append(VertexOutput(c_p0, c_n, float2(0, 0), em));
-        outStream.Append(VertexOutput(c_p1, c_n, float2(1, 0), em));
-        outStream.Append(VertexOutput(c_p4, c_n, float2(0, 1), em));
-        outStream.Append(VertexOutput(c_p5, c_n, float2(1, 1), em));
-        outStream.RestartStrip();
-
-        c_n = float3(0, 1, 0);
-        outStream.Append(VertexOutput(c_p3, c_n, float2(0, 0), em));
-        outStream.Append(VertexOutput(c_p2, c_n, float2(1, 0), em));
-        outStream.Append(VertexOutput(c_p7, c_n, float2(0, 1), em));
-        outStream.Append(VertexOutput(c_p6, c_n, float2(1, 1), em));
-        outStream.RestartStrip();
-
-        c_n = float3(0, 0, -1);
-        outStream.Append(VertexOutput(c_p1, c_n, float2(0, 0), em));
-        outStream.Append(VertexOutput(c_p0, c_n, float2(1, 0), em));
-        outStream.Append(VertexOutput(c_p3, c_n, float2(0, 1), em));
-        outStream.Append(VertexOutput(c_p2, c_n, float2(1, 1), em));
-        outStream.RestartStrip();
-
-        c_n = float3(0, 0, 1);
-        outStream.Append(VertexOutput(c_p4, c_n, float2(0, 0), em));
-        outStream.Append(VertexOutput(c_p5, c_n, float2(1, 0), em));
-        outStream.Append(VertexOutput(c_p6, c_n, float2(0, 1), em));
-        outStream.Append(VertexOutput(c_p7, c_n, float2(1, 1), em));
-        outStream.RestartStrip();
-    }
+    c_n = float3(0, 0, 1);
+    outStream.Append(VertexOutput(c_p4, c_n, float2(0, 0), em));
+    outStream.Append(VertexOutput(c_p5, c_n, float2(1, 0), em));
+    outStream.Append(VertexOutput(c_p6, c_n, float2(0, 1), em));
+    outStream.Append(VertexOutput(c_p7, c_n, float2(1, 1), em));
+    outStream.RestartStrip();
 }
 
 //
@@ -261,7 +245,7 @@ void Fragment(
     );
 
     // Detect fixed-width edges with using screen space derivatives of
-    // barycentric coordinates.
+    // in-quad coodinates.
     float2 bcc = input.edge;
     float2 fw = fwidth(bcc);
     float2 edge2 = min(smoothstep(fw / 2, fw,     bcc),
@@ -277,11 +261,14 @@ void Fragment(
     data.normalWorld = input.normal;
     UnityStandardDataToGbuffer(data, outGBuffer0, outGBuffer1, outGBuffer2);
 
-    // Output ambient light and edge emission to the emission buffer.
+    // Output ambient light to the emission buffer.
     half3 sh = ShadeSHPerPixel(data.normalWorld, input.ambient, input.wpos);
     outEmission = half4(sh * data.diffuseColor, 1);
-    outEmission.xyz += lerp(_Emission1, _Emission2, input.emission.y) * input.emission.x;
-    outEmission.xyz += lerp(_EdgeColor1, _EdgeColor2, input.emission.y) * input.emission.x * edge;
+
+    // Add emission colors.
+    float2 em = input.emission;
+    outEmission.xyz += lerp(_Emission1, _Emission2, em.y) * em.x;
+    outEmission.xyz += lerp(_EdgeColor1, _EdgeColor2, em.y) * em.x * edge;
 }
 
 #endif
